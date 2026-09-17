@@ -6,7 +6,7 @@ Public API:
 
 from __future__ import annotations
 
-from carbon_model_router.analyzer import analyze_prompt, estimate_tokens
+from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt, estimate_tokens
 from carbon_model_router.catalog import DEFAULT_MODELS, default_catalog, load_catalog_json
 from carbon_model_router.router import (
     DEFAULT_CONFIDENCE_THRESHOLD,
@@ -27,6 +27,7 @@ __version__ = "0.1.0"
 __all__ = [
     "DEFAULT_CONFIDENCE_THRESHOLD",
     "DEFAULT_MODELS",
+    "VALID_DOMAINS",
     "Catalog",
     "ComplexityScore",
     "ModelSpec",

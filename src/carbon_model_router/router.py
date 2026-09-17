@@ -138,13 +138,17 @@ def route_prompt(
     confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
     carbon_weighted: bool = False,
     complexity: ComplexityScore | None = None,
+    domain: str | None = None,
 ) -> RouteDecision:
-    """Route a prompt to the smallest eligible model."""
+    """Route a prompt to the smallest eligible model.
+
+    ``domain`` is forwarded to the analyzer when ``complexity`` is not supplied.
+    """
     cat = catalog if catalog is not None else default_catalog()
     if not cat.models:
         raise ValueError("catalog is empty")
 
-    score = complexity if complexity is not None else analyze_prompt(prompt)
+    score = complexity if complexity is not None else analyze_prompt(prompt, domain=domain)
     tokens = estimate_tokens(prompt)
     candidates = eligible_models(
         cat, score.required_capability, confidence_threshold, tokens
