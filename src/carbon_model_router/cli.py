@@ -7,6 +7,7 @@ import json
 import sys
 
 from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt
+from carbon_model_router.batch import parse_prompt_file, route_prompts
 from carbon_model_router.catalog import default_catalog, load_catalog_json
 from carbon_model_router.config import (
     effective_catalog,
@@ -117,6 +118,49 @@ def build_parser() -> argparse.ArgumentParser:
         choices=VALID_DOMAINS,
         default=None,
         help="Force prompt domain (code|math|chat) instead of auto-detect",
+    )
+
+    # route-file
+    p_rf = sub.add_parser(
+        "route-file",
+        help="Route every prompt in a file and summarize cost/carbon savings",
+    )
+    p_rf.add_argument(
+        "file",
+        help="Path to a prompt file (prompts separated by a line with only ---)",
+    )
+    p_rf.add_argument(
+        "--catalog",
+        default=None,
+        help="Path to a JSON catalog (default: built-in)",
+    )
+    p_rf.add_argument(
+        "--threshold",
+        type=float,
+        default=DEFAULT_CONFIDENCE_THRESHOLD,
+        help=f"Minimum confidence 0-1 (default: {DEFAULT_CONFIDENCE_THRESHOLD})",
+    )
+    p_rf.add_argument(
+        "--carbon",
+        action="store_true",
+        help="Prefer lowest-energy model among eligible candidates",
+    )
+    p_rf.add_argument(
+        "--domain",
+        choices=VALID_DOMAINS,
+        default=None,
+        help="Force prompt domain (code|math|chat) instead of auto-detect",
+    )
+    p_rf.add_argument(
+        "--user",
+        action="store_true",
+        help="Merge user catalog (~/.config/cmr/catalog.json or cmr.toml)",
+    )
+    p_rf.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="Emit JSON batch report with items and savings summary",
     )
 
     sub.add_parser("version", help="Print version")
@@ -241,11 +285,78 @@ def cmd_version(_args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _print_batch_report(report) -> None:
+    print("carbon-model-router batch report")
+    print("=" * 40)
+    for item in report.items:
+        m = item.decision.model
+        print(
+            f"[{item.index}] {m.id:<16} "
+            f"${item.decision.estimated_cost:.6f}  "
+            f"{item.decision.estimated_energy_kwh:.6f} kWh  "
+            f"vs {item.default_model_id} "
+            f"(save ${item.saved_cost:.6f})"
+        )
+        print(f"     {item.prompt_preview}")
+    s = report.summary
+    if s is None:
+        return
+    print()
+    print("savings vs default (always frontier)")
+    print("-" * 40)
+    print(f"prompts:          {s.prompt_count}")
+    print(f"default model:    {s.default_model_id}")
+    print(f"routed cost:      ${s.routed_cost:.6f}")
+    print(f"default cost:     ${s.default_cost:.6f}")
+    print(f"saved cost:       ${s.saved_cost:.6f}  ({s.saved_cost_pct:.1f}%)")
+    print(f"routed energy:    {s.routed_energy_kwh:.6f} kWh")
+    print(f"default energy:   {s.default_energy_kwh:.6f} kWh")
+    print(f"saved energy:     {s.saved_energy_kwh:.6f} kWh  ({s.saved_energy_pct:.1f}%)")
+
+
+def cmd_route_file(args: argparse.Namespace) -> int:
+    try:
+        prompts = parse_prompt_file(args.file)
+    except FileNotFoundError:
+        print(f"error: prompt file not found: {args.file}", file=sys.stderr)
+        return EXIT_ERROR
+    except OSError as exc:
+        print(f"error: cannot read prompt file: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+
+    if not prompts:
+        print("error: no prompts found in file", file=sys.stderr)
+        return EXIT_ERROR
+
+    use_user = getattr(args, "user", False)
+    try:
+        catalog = _load_catalog(args.catalog, use_user=use_user)
+    except CatalogError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+
+    report = route_prompts(
+        prompts,
+        catalog,
+        confidence_threshold=args.threshold,
+        carbon_weighted=args.carbon,
+        domain=args.domain,
+    )
+
+    if args.as_json:
+        sys.stdout.write(json.dumps(report.to_dict(), indent=2) + "\n")
+    else:
+        _print_batch_report(report)
+    return EXIT_OK
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "route":
         return cmd_route(args)
+    if args.command == "route-file":
+        return cmd_route_file(args)
     if args.command == "catalog":
         return cmd_catalog(args)
     if args.command == "analyze":

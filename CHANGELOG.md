@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `cmr route-file <file>` routes every prompt in a file (separator: a line
+  containing only `---`) and prints per-prompt decisions plus a savings
+  summary versus always using the frontier model.
+- Pure-core batch API: `parse_prompt_file`, `parse_prompt_text`,
+  `route_prompts`, `summarize_savings`, `frontier_model`,
+  `BatchRouteReport`, `BatchRouteItem`, `SavingsSummary`.
+- JSON batch payload (`--json`) with `items[]` and `summary` (routed vs
+  default cost/energy, absolute and percent savings).
+- Tests covering separator parsing, savings math, CLI text/JSON, and the
+  examples/prompt-list.txt fixture.
+
 ## [0.3.0] - 2026-09-23
 
 ### Added
