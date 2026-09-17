@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Typed exception module (`carbon_model_router.errors`): `CarbonRouterError`,
+  `CatalogError`, `NoEligibleModelError`. Typed errors also subclass `ValueError`.
+- Integration tests routing a multi-prompt list file against the default and
+  a custom JSON catalog.
+- `examples/prompt-list.txt` sample batch input.
+- README: Python API section with exception hierarchy.
+
+### Changed
+- Catalog loaders and `route_prompt` / `pick_smallest` raise typed errors
+  instead of bare `ValueError`.
+
 ## [0.1.1] - 2026-09-18
 
 ### Added

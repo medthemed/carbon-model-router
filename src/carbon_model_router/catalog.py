@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from carbon_model_router.errors import CatalogError
 from carbon_model_router.types import Catalog, ModelSpec
 
 # Numbers are illustrative order-of-magnitude estimates for routing demos.
@@ -68,16 +69,32 @@ def default_catalog() -> Catalog:
 
 
 def load_catalog_json(path: str | Path) -> Catalog:
-    """Load a catalog from a JSON file: {"models": [ModelSpec dicts]}."""
+    """Load a catalog from a JSON file: {"models": [ModelSpec dicts]}.
+
+    Raises
+    ------
+    CatalogError
+        If the file is missing, malformed, empty, or has duplicate ids.
+    """
     p = Path(path)
-    data = json.loads(p.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise CatalogError(f"catalog file not found: {p}") from exc
+    except json.JSONDecodeError as exc:
+        raise CatalogError(f"catalog file is not valid JSON: {p}: {exc}") from exc
     if isinstance(data, dict):
         raw_models = data.get("models", [])
     else:
         raw_models = data
-    models = [ModelSpec(**item) for item in raw_models]
+    try:
+        models = [ModelSpec(**item) for item in raw_models]
+    except TypeError as exc:
+        raise CatalogError(f"invalid model entry in {p}: {exc}") from exc
+    except ValueError as exc:
+        raise CatalogError(f"invalid model values in {p}: {exc}") from exc
     if not models:
-        raise ValueError(f"catalog file has no models: {p}")
+        raise CatalogError(f"catalog file has no models: {p}")
     _validate_unique_ids(models)
     return Catalog(models=models)
 
@@ -86,7 +103,7 @@ def _validate_unique_ids(models: list[ModelSpec]) -> None:
     seen: set[str] = set()
     for m in models:
         if m.id in seen:
-            raise ValueError(f"duplicate model id: {m.id}")
+            raise CatalogError(f"duplicate model id: {m.id}")
         seen.add(m.id)
 
 
