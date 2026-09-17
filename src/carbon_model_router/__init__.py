@@ -8,6 +8,12 @@ from __future__ import annotations
 
 from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt, estimate_tokens
 from carbon_model_router.catalog import DEFAULT_MODELS, default_catalog, load_catalog_json
+from carbon_model_router.config import (
+    effective_catalog,
+    load_user_catalog,
+    merge_catalogs,
+    user_catalog_path,
+)
 from carbon_model_router.errors import (
     CarbonRouterError,
     CatalogError,
@@ -44,9 +50,13 @@ __all__ = [
     "analyze_prompt",
     "confidence_for",
     "default_catalog",
+    "effective_catalog",
     "eligible_models",
     "estimate_tokens",
     "load_catalog_json",
+    "load_user_catalog",
+    "merge_catalogs",
     "pick_smallest",
     "route_prompt",
+    "user_catalog_path",
 ]

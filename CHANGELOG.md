@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- User catalog file at `~/.config/cmr/catalog.json` or `~/.config/cmr/cmr.toml`
+  (Windows: `%APPDATA%\cmr\...`), merged with the built-in catalog.
+- `load_user_catalog()`, `merge_catalogs()`, `effective_catalog()`,
+  `user_catalog_path()`.
+- `cmr catalog --user` and `cmr route --user` merge user models (same id
+  overrides; new ids append).
+- README: user catalog format and lookup order.
+
 ## [0.2.0] - 2026-09-20
 
 ### Added
