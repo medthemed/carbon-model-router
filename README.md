@@ -16,6 +16,7 @@ capability and confidence bar. No live API calls.
 - **Carbon mode** — prefer lowest energy among eligible models
 - **Batch routing** — `cmr route-file prompts.txt` with cost/carbon savings summary
 - **CLI** — `cmr route`, `cmr route-file`, `cmr catalog`, `cmr analyze`
+- **CI-friendly** — `--format json` with documented stdout contract and JSON Schema
 - **Deterministic** — same prompt always routes to the same model
 - **Zero runtime deps** — Python 3.11+ stdlib only
 
@@ -48,6 +49,7 @@ cmr route "$(cat design_brief.md)"
 
 # JSON decision for pipelines
 cmr route "Summarize this ticket" --json
+cmr route "Summarize this ticket" --format json
 
 # Prefer lowest-carbon eligible model
 cmr route "Draft a commit message" --carbon
@@ -70,7 +72,35 @@ cmr analyze "Implement Raft leader election with formal proofs" --json
 # Batch-route a file of prompts (separated by a --- line) and see savings
 cmr route-file examples/prompt-list.txt
 cmr route-file examples/prompt-list.txt --json
+cmr route-file examples/prompt-list.txt --format json
 ```
+
+## Stdout contract (CI piping)
+
+`--format` controls what is written to **stdout**. Diagnostics and usage
+errors always go to **stderr**. Exit codes are independent of format
+(`0` success, `1` error).
+
+| Format | stdout | Schema |
+|--------|--------|--------|
+| `text` (default) | human decision / batch report | — |
+| `json` | single JSON object | [`schemas/route-decision.schema.json`](schemas/route-decision.schema.json) / [`schemas/batch-report.schema.json`](schemas/batch-report.schema.json) |
+
+`--json` is shorthand for `--format json`.
+
+```bash
+# pipe a decision into jq
+cmr route "Draft a standup" --format json | jq '.model.id'
+
+# batch savings for a dashboard
+cmr route-file prompts.txt --format json | jq '.summary.saved_cost_pct'
+```
+
+Stable decision keys: `model`, `complexity`, `confidence`,
+`estimated_tokens`, `estimated_cost`, `estimated_energy_kwh`,
+`carbon_weighted`, `rationale` (plus optional `rejected`).
+Stable batch keys: `items[]` and `summary` with `prompt_count`,
+`routed_*`, `default_*`, `saved_*`, `saved_*_pct`, `default_model_id`.
 
 ## Batch routing
 

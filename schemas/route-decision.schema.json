@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/medthemed/carbon-model-router/schemas/route-decision.schema.json",
+  "title": "carbon-model-router route decision",
+  "description": "Stable stdout contract for `cmr route --format json`. See README 'Stdout contract'.",
+  "type": "object",
+  "required": ["model", "complexity", "confidence", "estimated_tokens", "estimated_cost", "estimated_energy_kwh", "carbon_weighted", "rationale"],
+  "additionalProperties": true,
+  "properties": {
+    "model": {
+      "type": "object",
+      "required": ["id", "name", "provider", "cost_per_1k", "energy_kwh_per_1k", "capability", "max_tokens"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "provider": { "type": "string" },
+        "cost_per_1k": { "type": "number", "minimum": 0 },
+        "energy_kwh_per_1k": { "type": "number", "minimum": 0 },
+        "capability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_tokens": { "type": "integer", "minimum": 1 },
+        "notes": { "type": "string" }
+      }
+    },
+    "complexity": {
+      "type": "object",
+      "required": ["score", "required_capability"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "required_capability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "signals": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "estimated_tokens": { "type": "integer", "minimum": 0 },
+    "estimated_cost": { "type": "number", "minimum": 0 },
+    "estimated_energy_kwh": { "type": "number", "minimum": 0 },
+    "carbon_weighted": { "type": "boolean" },
+    "rejected": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rationale": { "type": "string" }
+  }
+}
