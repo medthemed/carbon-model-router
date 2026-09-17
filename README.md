@@ -110,13 +110,13 @@ Omit `--domain` to keep auto-detection.
 
 ## Built-in catalog (illustrative)
 
-| id | capability | $/1k | kWh/1k | max tokens |
-|----|------------|------|--------|------------|
-| nano-classifier | 0.25 | 0 | 0.00001 | 512 |
-| small-8b | 0.45 | 0.00005 | 0.00008 | 4096 |
-| medium-32b | 0.65 | 0.0004 | 0.00035 | 8192 |
-| large-70b | 0.80 | 0.0012 | 0.0009 | 16384 |
-| frontier-x | 0.97 | 0.015 | 0.0045 | 128000 |
+| id | capability | $/1k | kWh/1k | max tokens | pick when |
+|----|------------|------|--------|------------|-----------|
+| nano-classifier | 0.25 | 0 | 0.00001 | 512 | intent / label / yes-no |
+| small-8b | 0.45 | 0.00005 | 0.00008 | 4096 | short Q&A, rewrites, summaries |
+| medium-32b | 0.65 | 0.0004 | 0.00035 | 8192 | multi-step explanations, light code |
+| large-70b | 0.80 | 0.0012 | 0.0009 | 16384 | hard code, design docs, proofs |
+| frontier-x | 0.97 | 0.015 | 0.0045 | 128000 | research-grade, long-context, novel algorithms |
 
 Numbers are order-of-magnitude demos, not live pricing. Supply your own via
 `--catalog models.json`:
@@ -135,6 +135,49 @@ Numbers are order-of-magnitude demos, not live pricing. Supply your own via
     }
   ]
 }
+```
+
+### Cost vs carbon — worked example
+
+Same prompt, two modes. Illustrative catalog numbers only.
+
+Prompt (~40 tokens):
+
+```
+Draft a short commit message for fixing a null check in the payment adapter.
+```
+
+```bash
+$ cmr route "Draft a short commit message for fixing a null check in the payment adapter."
+model:       small-8b  (Small 8B Instruct, local)
+capability:  0.45
+confidence:  0.85
+complexity:  0.06  (required capability 0.27)
+tokens:      ~40
+est cost:    $0.000002
+est energy:  0.000003 kWh
+```
+
+```bash
+$ cmr route "Draft a short commit message for fixing a null check in the payment adapter." --carbon
+model:       nano-classifier  (Nano Classifier, local)
+...
+mode:        carbon-weighted
+```
+
+| mode | model | est $ | est kWh | notes |
+|------|-------|-------|---------|-------|
+| default | small-8b | 0.000002 | 0.000003 | lowest capability that still clears confidence |
+| `--carbon` | often the same | ≈ default | ≈ default | ties broken by energy |
+
+On a hard design prompt the gap widens — default routing still prefers the
+smallest confident model, while `--carbon` can pick a slightly larger but
+lower-energy model if the catalog ranks it greener. Swap in a real catalog via
+`--catalog` to see the tradeoff on your own numbers:
+
+```bash
+cmr route "$(cat design_brief.md)" --json | jq '.model, .estimated_cost, .estimated_energy_kwh'
+cmr route "$(cat design_brief.md)" --carbon --json | jq '.model, .estimated_cost, .estimated_energy_kwh'
 ```
 
 ## Python API
