@@ -6,7 +6,7 @@ import argparse
 import json
 import sys
 
-from carbon_model_router.analyzer import analyze_prompt
+from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt
 from carbon_model_router.catalog import default_catalog, load_catalog_json
 from carbon_model_router.router import DEFAULT_CONFIDENCE_THRESHOLD, route_prompt
 from carbon_model_router.types import Catalog, RouteDecision
@@ -70,6 +70,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Include rejected models in output",
     )
+    p_route.add_argument(
+        "--domain",
+        choices=VALID_DOMAINS,
+        default=None,
+        help="Force prompt domain (code|math|chat) instead of auto-detect",
+    )
 
     # catalog
     p_cat = sub.add_parser("catalog", help="List models in the catalog")
@@ -90,6 +96,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_an.add_argument("prompt", nargs="?", default=None)
     p_an.add_argument("-f", "--file", default=None)
     p_an.add_argument("--json", action="store_true", dest="as_json")
+    p_an.add_argument(
+        "--domain",
+        choices=VALID_DOMAINS,
+        default=None,
+        help="Force prompt domain (code|math|chat) instead of auto-detect",
+    )
 
     sub.add_parser("version", help="Print version")
     return parser
@@ -120,6 +132,7 @@ def cmd_route(args: argparse.Namespace) -> int:
         catalog,
         confidence_threshold=args.threshold,
         carbon_weighted=args.carbon,
+        domain=args.domain,
     )
     if args.as_json:
         payload = decision.to_dict()
@@ -173,7 +186,7 @@ def cmd_catalog(args: argparse.Namespace) -> int:
 
 def cmd_analyze(args: argparse.Namespace) -> int:
     text = _read_prompt(args)
-    score = analyze_prompt(text)
+    score = analyze_prompt(text, domain=args.domain)
     if args.as_json:
         sys.stdout.write(json.dumps(score.to_dict(), indent=2) + "\n")
     else:

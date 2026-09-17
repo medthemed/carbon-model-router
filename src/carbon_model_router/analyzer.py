@@ -78,6 +78,16 @@ _SIMPLE_INTENT = re.compile(
     re.IGNORECASE,
 )
 
+# Prompt-domain overrides. Floors raise a signal when the caller already knows
+# the domain; chat applies a soft complexity cap for chatty prompts.
+VALID_DOMAINS = ("code", "math", "chat")
+_DOMAIN_SIGNAL_FLOORS: dict[str, tuple[str, float]] = {
+    "code": ("code", 0.55),
+    "math": ("math", 0.55),
+}
+_CHAT_SOFT_CAP = 0.35
+_CHAT_HARD_SIGNAL = 0.30
+
 
 def clamp01(value: float) -> float:
     if value < 0.0:
@@ -157,11 +167,22 @@ def score_to_capability(score: float) -> float:
     return points[-1][1]
 
 
-def analyze_prompt(text: str) -> ComplexityScore:
-    """Analyze prompt text and return complexity + required capability."""
+def analyze_prompt(text: str, domain: str | None = None) -> ComplexityScore:
+    """Analyze prompt text and return complexity + required capability.
+
+    ``domain`` optionally forces the prompt domain: ``code``, ``math``, or
+    ``chat``. Code/math raise the matching signal floor so short-but-hard
+    prompts are not under-routed. Chat applies a soft complexity cap so
+    chatty prompts stay on small models unless other hard signals dominate.
+    """
     if text is None:
         text = ""
     stripped = text.strip()
+
+    if domain is not None and domain not in VALID_DOMAINS:
+        raise ValueError(
+            f"invalid domain {domain!r}; expected one of {', '.join(VALID_DOMAINS)}"
+        )
 
     signals: dict[str, float] = {}
     reasons: list[str] = []
@@ -179,6 +200,13 @@ def analyze_prompt(text: str) -> ComplexityScore:
         if reason:
             reasons.append(reason)
 
+    # Domain floors applied before the weighted sum
+    if domain in _DOMAIN_SIGNAL_FLOORS:
+        signal_name, floor = _DOMAIN_SIGNAL_FLOORS[domain]
+        if signals[signal_name] < floor:
+            signals[signal_name] = floor
+        reasons.append(f"domain override: {domain}")
+
     weighted = (
         WEIGHT_LENGTH * signals["length"]
         + WEIGHT_CODE * signals["code"]
@@ -193,6 +221,18 @@ def analyze_prompt(text: str) -> ComplexityScore:
     if stripped and _SIMPLE_INTENT.search(stripped) and score > 0.35:
         score = min(score, 0.35)
         reasons.append("simple-intent cap applied")
+
+    # Chat domain: keep chatty prompts cheap unless code/math dominate
+    if domain == "chat":
+        if (
+            signals["code"] < _CHAT_HARD_SIGNAL
+            and signals["math"] < _CHAT_HARD_SIGNAL
+            and score > _CHAT_SOFT_CAP
+        ):
+            score = min(score, _CHAT_SOFT_CAP)
+            reasons.append("domain override: chat (soft cap)")
+        else:
+            reasons.append("domain override: chat")
 
     # Empty / near-empty prompts are trivial
     if len(stripped) < 3:
@@ -217,6 +257,7 @@ def estimate_tokens(text: str) -> int:
 
 
 __all__ = [
+    "VALID_DOMAINS",
     "analyze_prompt",
     "clamp01",
     "code_signal",

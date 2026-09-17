@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `--domain code|math|chat` on `cmr route` and `cmr analyze`, plus
+  `analyze_prompt(..., domain=...)` / `route_prompt(..., domain=...)`.
+  Code/math raise signal floors for short-but-hard prompts; chat soft-caps
+  complexity so chatty text stays on small models.
+
 ## [0.1.0] - 2026-09-16
 
 ### Added
