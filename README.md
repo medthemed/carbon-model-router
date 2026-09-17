@@ -18,6 +18,18 @@ capability and confidence bar. No live API calls.
 - **Deterministic** — same prompt always routes to the same model
 - **Zero runtime deps** — Python 3.11+ stdlib only
 
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Prompt] --> B[Complexity Analyzer]
+    B --> C[Required Capability]
+    C --> D[Model Catalog]
+    D --> E[Router]
+    E --> F[Smallest Eligible Model]
+    E --> G[Rationale JSON]
+```
+
 ## Install
 
 ```bash
