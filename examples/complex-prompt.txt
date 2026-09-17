@@ -1,0 +1,14 @@
+Design a distributed consensus protocol for a multi-region payments system.
+
+Requirements:
+1. Survive minority partitions without split-brain
+2. Provide linearizability for balance updates
+3. Compare Raft vs Paxos trade-offs for this workload
+4. Prove safety under asynchronous network assumptions
+5. Outline a formal verification plan
+
+Please produce:
+- An architecture diagram description
+- A step-by-step rollout plan
+- Pseudocode for the leader election path
+- A JSON schema for the replication log entry

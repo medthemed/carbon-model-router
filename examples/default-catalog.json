@@ -1,0 +1,54 @@
+{
+  "models": [
+    {
+      "id": "nano-classifier",
+      "name": "Nano Classifier",
+      "provider": "local",
+      "cost_per_1k": 0.0,
+      "energy_kwh_per_1k": 0.00001,
+      "capability": 0.25,
+      "max_tokens": 512,
+      "notes": "Ultra-cheap intent/label routing."
+    },
+    {
+      "id": "small-8b",
+      "name": "Small 8B Instruct",
+      "provider": "local",
+      "cost_per_1k": 0.00005,
+      "energy_kwh_per_1k": 0.00008,
+      "capability": 0.45,
+      "max_tokens": 4096,
+      "notes": "Good for short rewrites, summaries, simple Q&A."
+    },
+    {
+      "id": "medium-32b",
+      "name": "Medium 32B Instruct",
+      "provider": "hosted",
+      "cost_per_1k": 0.0004,
+      "energy_kwh_per_1k": 0.00035,
+      "capability": 0.65,
+      "max_tokens": 8192,
+      "notes": "Solid generalist for multi-step writing and light code."
+    },
+    {
+      "id": "large-70b",
+      "name": "Large 70B Instruct",
+      "provider": "hosted",
+      "cost_per_1k": 0.0012,
+      "energy_kwh_per_1k": 0.0009,
+      "capability": 0.80,
+      "max_tokens": 16384,
+      "notes": "Strong reasoning and non-trivial code."
+    },
+    {
+      "id": "frontier-x",
+      "name": "Frontier X",
+      "provider": "hosted",
+      "cost_per_1k": 0.015,
+      "energy_kwh_per_1k": 0.0045,
+      "capability": 0.97,
+      "max_tokens": 128000,
+      "notes": "Reserve for hard research, long-context, novel design."
+    }
+  ]
+}
