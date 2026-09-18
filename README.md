@@ -51,6 +51,11 @@ cmr route "Summarize this ticket" --json
 # Prefer lowest-carbon eligible model
 cmr route "Draft a commit message" --carbon
 
+# Force the prompt domain when you already know it
+cmr route "def quicksort(arr):" --domain code
+cmr route "Prove the intermediate value theorem" --domain math
+cmr route "Hey, can you reword this?" --domain chat
+
 # List the catalog
 cmr catalog
 
@@ -84,6 +89,24 @@ rationale:   complexity=0.08; required_capability=0.29; chose small-8b ...
 Confidence starts at 0.5 when a model exactly meets required capability and
 rises toward 1.0 with surplus. The default threshold (0.70) therefore prefers
 a small safety margin over the bare minimum.
+
+### Domain override
+
+Heuristics can miss short-but-hard prompts. When you already know the domain,
+force it:
+
+| `--domain` | Effect |
+|------------|--------|
+| `code` | Floor the code signal at 0.55 so code tasks are not under-routed |
+| `math` | Floor the math signal at 0.55 |
+| `chat` | Soft-cap complexity at 0.35 unless code/math signals dominate |
+
+```bash
+cmr route "fix this off-by-one" --domain code
+cmr analyze "short lemma about continuity" --domain math --json
+```
+
+Omit `--domain` to keep auto-detection.
 
 ## Built-in catalog (illustrative)
 
