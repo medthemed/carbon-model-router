@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `analyze_prompt(..., domain=...)` / `route_prompt(..., domain=...)`.
   Code/math raise signal floors for short-but-hard prompts; chat soft-caps
   complexity so chatty text stays on small models.
+- README: model comparison table with pick-when guidance and a cost/carbon
+  worked example.
 
 ## [0.1.0] - 2026-09-16
 
