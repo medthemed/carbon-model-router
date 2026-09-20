@@ -1,13 +1,18 @@
 """carbon-model-router: route prompts to the smallest capable LLM.
 
 Public API:
-    analyze_prompt, default_catalog, route_prompt
+    analyze_prompt, default_catalog, load_catalog_json, route_prompt
 """
 
 from __future__ import annotations
 
 from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt, estimate_tokens
 from carbon_model_router.catalog import DEFAULT_MODELS, default_catalog, load_catalog_json
+from carbon_model_router.errors import (
+    CarbonRouterError,
+    CatalogError,
+    NoEligibleModelError,
+)
 from carbon_model_router.router import (
     DEFAULT_CONFIDENCE_THRESHOLD,
     confidence_for,
@@ -28,9 +33,12 @@ __all__ = [
     "DEFAULT_CONFIDENCE_THRESHOLD",
     "DEFAULT_MODELS",
     "VALID_DOMAINS",
+    "CarbonRouterError",
     "Catalog",
+    "CatalogError",
     "ComplexityScore",
     "ModelSpec",
+    "NoEligibleModelError",
     "RouteDecision",
     "__version__",
     "analyze_prompt",

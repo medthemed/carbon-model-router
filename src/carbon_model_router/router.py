@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from carbon_model_router.analyzer import analyze_prompt, estimate_tokens
 from carbon_model_router.catalog import default_catalog
+from carbon_model_router.errors import CatalogError, NoEligibleModelError
 from carbon_model_router.types import (
     Catalog,
     ComplexityScore,
@@ -60,7 +61,7 @@ def pick_smallest(
     Carbon mode = lowest energy first, then cost, then capability, then id.
     """
     if not candidates:
-        raise ValueError("no eligible models")
+        raise NoEligibleModelError("no eligible models")
 
     if carbon_weighted:
         ordered = sorted(
@@ -146,7 +147,7 @@ def route_prompt(
     """
     cat = catalog if catalog is not None else default_catalog()
     if not cat.models:
-        raise ValueError("catalog is empty")
+        raise CatalogError("catalog is empty")
 
     score = complexity if complexity is not None else analyze_prompt(prompt, domain=domain)
     tokens = estimate_tokens(prompt)
