@@ -1,0 +1,18 @@
+What is the capital of France?
+---
+Summarize the plot of Hamlet in one sentence.
+---
+Design a distributed consensus protocol for a multi-region payments system.
+Requirements:
+1. Survive minority partitions without split-brain
+2. Provide linearizability for balance updates
+3. Compare Raft vs Paxos trade-offs
+4. Prove safety under asynchronous assumptions
+---
+```python
+def fibonacci(n: int) -> int:
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+```
+Add memoization and write unit tests for edge cases.
