@@ -63,6 +63,37 @@ cmr catalog
 cmr analyze "Implement Raft leader election with formal proofs" --json
 ```
 
+## Python API
+
+```python
+from carbon_model_router import (
+    route_prompt,
+    analyze_prompt,
+    load_catalog_json,
+    CarbonRouterError,
+    CatalogError,
+    NoEligibleModelError,
+)
+
+decision = route_prompt("What is the capital of France?")
+print(decision.model.id, decision.estimated_cost)
+
+# Batch: route a prompt list file
+prompts = Path("examples/prompt-list.txt").read_text().split("\n---\n")
+for text in prompts:
+    if text.strip():
+        d = route_prompt(text.strip())
+        print(d.model.id, d.complexity.required_capability)
+```
+
+Typed exceptions (each also subclasses `ValueError` so existing handlers work):
+
+```
+CarbonRouterError
+├── CatalogError            # missing / empty / malformed / duplicate ids
+└── NoEligibleModelError    # no model clears capability + confidence + window
+```
+
 ## Example output
 
 ```
