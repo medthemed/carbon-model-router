@@ -8,6 +8,12 @@ import sys
 
 from carbon_model_router.analyzer import VALID_DOMAINS, analyze_prompt
 from carbon_model_router.catalog import default_catalog, load_catalog_json
+from carbon_model_router.config import (
+    effective_catalog,
+    load_user_catalog,
+    user_catalog_path,
+)
+from carbon_model_router.errors import CatalogError
 from carbon_model_router.router import DEFAULT_CONFIDENCE_THRESHOLD, route_prompt
 from carbon_model_router.types import Catalog, RouteDecision
 
@@ -76,6 +82,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Force prompt domain (code|math|chat) instead of auto-detect",
     )
+    p_route.add_argument(
+        "--user",
+        action="store_true",
+        help="Merge user catalog (~/.config/cmr/catalog.json or cmr.toml)",
+    )
 
     # catalog
     p_cat = sub.add_parser("catalog", help="List models in the catalog")
@@ -83,6 +94,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--catalog",
         default=None,
         help="Path to a JSON catalog (default: built-in)",
+    )
+    p_cat.add_argument(
+        "--user",
+        action="store_true",
+        help="Merge user catalog (~/.config/cmr/catalog.json or cmr.toml)",
     )
     p_cat.add_argument(
         "--json",
@@ -107,9 +123,11 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_catalog(path: str | None) -> Catalog:
+def _load_catalog(path: str | None, use_user: bool = False) -> Catalog:
     if path:
         return load_catalog_json(path)
+    if use_user:
+        return effective_catalog()
     return default_catalog()
 
 
@@ -126,7 +144,12 @@ def _read_prompt(args: argparse.Namespace) -> str:
 
 def cmd_route(args: argparse.Namespace) -> int:
     text = _read_prompt(args)
-    catalog = _load_catalog(args.catalog)
+    use_user = getattr(args, "user", False)
+    try:
+        catalog = _load_catalog(args.catalog, use_user=use_user)
+    except CatalogError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
     decision = route_prompt(
         text,
         catalog,
@@ -168,7 +191,18 @@ def _print_decision(decision: RouteDecision, show_rejected: bool = False) -> Non
 
 
 def cmd_catalog(args: argparse.Namespace) -> int:
-    catalog = _load_catalog(args.catalog)
+    use_user = getattr(args, "user", False)
+    try:
+        catalog = _load_catalog(args.catalog, use_user=use_user)
+    except CatalogError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+    if use_user and not args.catalog:
+        source = user_catalog_path()
+        if source is not None:
+            print(f"# user catalog: {source}", file=sys.stderr)
+        else:
+            print("# no user catalog found; showing built-in", file=sys.stderr)
     if args.as_json:
         payload = {"models": [m.to_dict() for m in catalog.sorted_by_capability()]}
         sys.stdout.write(json.dumps(payload, indent=2) + "\n")
