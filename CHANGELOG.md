@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-23
+
 ### Added
 - User catalog file at `~/.config/cmr/catalog.json` or `~/.config/cmr/cmr.toml`
   (Windows: `%APPDATA%\cmr\...`), merged with the built-in catalog.
