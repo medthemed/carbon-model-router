@@ -59,9 +59,53 @@ cmr route "Hey, can you reword this?" --domain chat
 # List the catalog
 cmr catalog
 
+# Merge your private models from ~/.config/cmr/catalog.json or cmr.toml
+cmr catalog --user
+cmr route "Draft a release note" --user
+
 # Inspect complexity signals without routing
 cmr analyze "Implement Raft leader election with formal proofs" --json
 ```
+
+## User catalog
+
+Drop a catalog next to your other tool config and `--user` merges it with the
+built-in models. Same `id` overrides the built-in entry; new ids are appended.
+
+Lookup order (first match wins):
+
+1. `~/.config/cmr/catalog.json` (Windows: `%APPDATA%\cmr\catalog.json`)
+2. `~/.config/cmr/cmr.toml` (Windows: `%APPDATA%\cmr\cmr.toml`)
+
+```json
+{
+  "models": [
+    {
+      "id": "team-local-8b",
+      "name": "Team Local 8B",
+      "provider": "local",
+      "cost_per_1k": 0.0,
+      "energy_kwh_per_1k": 0.00004,
+      "capability": 0.55,
+      "max_tokens": 8192,
+      "notes": "Internal fine-tune"
+    }
+  ]
+}
+```
+
+```toml
+[[models]]
+id = "team-local-8b"
+name = "Team Local 8B"
+provider = "local"
+cost_per_1k = 0.0
+energy_kwh_per_1k = 0.00004
+capability = 0.55
+max_tokens = 8192
+```
+
+In Python: `effective_catalog()` or `merge_catalogs(default_catalog(), load_user_catalog())`.
 
 ## Python API
 
@@ -70,6 +114,9 @@ from carbon_model_router import (
     route_prompt,
     analyze_prompt,
     load_catalog_json,
+    load_user_catalog,
+    merge_catalogs,
+    effective_catalog,
     CarbonRouterError,
     CatalogError,
     NoEligibleModelError,
