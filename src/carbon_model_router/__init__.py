@@ -43,7 +43,7 @@ from carbon_model_router.types import (
     RouteDecision,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "DEFAULT_CONFIDENCE_THRESHOLD",
