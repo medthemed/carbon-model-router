@@ -14,7 +14,8 @@ capability and confidence bar. No live API calls.
 - **Complexity analyzer** — length, code fences, math, multi-step markers, domain keywords
 - **Router** — smallest model whose capability ≥ required and confidence ≥ threshold
 - **Carbon mode** — prefer lowest energy among eligible models
-- **CLI** — `cmr route`, `cmr catalog`, `cmr analyze`
+- **Batch routing** — `cmr route-file prompts.txt` with cost/carbon savings summary
+- **CLI** — `cmr route`, `cmr route-file`, `cmr catalog`, `cmr analyze`
 - **Deterministic** — same prompt always routes to the same model
 - **Zero runtime deps** — Python 3.11+ stdlib only
 
@@ -65,6 +66,40 @@ cmr route "Draft a release note" --user
 
 # Inspect complexity signals without routing
 cmr analyze "Implement Raft leader election with formal proofs" --json
+
+# Batch-route a file of prompts (separated by a --- line) and see savings
+cmr route-file examples/prompt-list.txt
+cmr route-file examples/prompt-list.txt --json
+```
+
+## Batch routing
+
+`cmr route-file` routes every prompt in a file, then compares the batch
+against always sending traffic to the frontier model (the default expensive
+choice). Prompts are separated by a line containing only `---`.
+
+```
+What is the capital of France?
+---
+Summarize the plot of Hamlet in one sentence.
+---
+Design a distributed consensus protocol...
+```
+
+```bash
+cmr route-file prompts.txt
+cmr route-file prompts.txt --json
+cmr route-file prompts.txt --carbon
+```
+
+Python API (pure helpers, safe to shard across a pool):
+
+```python
+from carbon_model_router import parse_prompt_file, route_prompts
+
+prompts = parse_prompt_file("examples/prompt-list.txt")
+report = route_prompts(prompts)
+print(report.summary.saved_cost, report.summary.saved_energy_kwh)
 ```
 
 ## User catalog
