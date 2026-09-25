@@ -22,6 +22,13 @@ __version__ = "0.4.0"
 
 EXIT_OK = 0
 EXIT_ERROR = 1
+FORMAT_CHOICES = ("text", "json")
+
+
+def _effective_format(args: argparse.Namespace) -> str:
+    if getattr(args, "as_json", False):
+        return "json"
+    return getattr(args, "format", "text") or "text"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -70,7 +77,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         dest="as_json",
-        help="Emit JSON decision",
+        help="Shorthand for --format json",
+    )
+    p_route.add_argument(
+        "--format",
+        choices=FORMAT_CHOICES,
+        default="text",
+        dest="format",
+        help="Output format: text or json (default: text)",
     )
     p_route.add_argument(
         "--show-rejected",
@@ -160,7 +174,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--json",
         action="store_true",
         dest="as_json",
-        help="Emit JSON batch report with items and savings summary",
+        help="Shorthand for --format json",
+    )
+    p_rf.add_argument(
+        "--format",
+        choices=FORMAT_CHOICES,
+        default="text",
+        dest="format",
+        help="Output format: text or json (default: text)",
     )
 
     sub.add_parser("version", help="Print version")
@@ -201,7 +222,7 @@ def cmd_route(args: argparse.Namespace) -> int:
         carbon_weighted=args.carbon,
         domain=args.domain,
     )
-    if args.as_json:
+    if _effective_format(args) == "json":
         payload = decision.to_dict()
         if not args.show_rejected:
             payload.pop("rejected", None)
@@ -343,7 +364,7 @@ def cmd_route_file(args: argparse.Namespace) -> int:
         domain=args.domain,
     )
 
-    if args.as_json:
+    if _effective_format(args) == "json":
         sys.stdout.write(json.dumps(report.to_dict(), indent=2) + "\n")
     else:
         _print_batch_report(report)
