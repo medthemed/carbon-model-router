@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `--format json|text` on `cmr route` and `cmr route-file` (`--json` remains
+  shorthand for `--format json`).
+- JSON Schema files: `schemas/route-decision.schema.json` and
+  `schemas/batch-report.schema.json`.
+- README: stdout contract for CI piping (stdout vs stderr, stable keys,
+  jq examples).
+- Format-dispatch and schema-shape tests.
+
 ## [0.4.0] - 2026-09-24
 
 ### Added
