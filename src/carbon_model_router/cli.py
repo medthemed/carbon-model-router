@@ -18,7 +18,7 @@ from carbon_model_router.errors import CatalogError
 from carbon_model_router.router import DEFAULT_CONFIDENCE_THRESHOLD, route_prompt
 from carbon_model_router.types import Catalog, RouteDecision
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 EXIT_OK = 0
 EXIT_ERROR = 1
